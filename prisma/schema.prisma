@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  passwordHash      String
+  activeWorkspaceId String?
+  createdAt         DateTime    @default(now())
+  workspaces        Workspace[]
+}
+
+model Workspace {
+  id               String     @id @default(cuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  learningLang     String
+  translationLangs String[]
+  settings         Json       @default("{}")
+  createdAt        DateTime   @default(now())
+  topics           Topic[]
+  sentences        Sentence[]
+
+  @@index([userId])
+}
+
+model Topic {
+  id          String     @id @default(cuid())
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  createdAt   DateTime   @default(now())
+  sentences   Sentence[]
+
+  @@index([workspaceId])
+}
+
+model Sentence {
+  id           String        @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  topicId      String?
+  topic        Topic?        @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  text         String
+  tokens       Json
+  createdAt    DateTime      @default(now())
+  translations Translation[]
+  cards        Card[]
+
+  @@index([workspaceId])
+  @@index([topicId])
+}
+
+model Translation {
+  id         String   @id @default(cuid())
+  sentenceId String
+  sentence   Sentence @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
+  lang       String
+  text       String
+
+  @@unique([sentenceId, lang])
+  @@index([sentenceId])
+}
+
+model Card {
+  id           String      @id @default(cuid())
+  sentenceId   String
+  sentence     Sentence    @relation(fields: [sentenceId], references: [id], onDelete: Cascade)
+  tokenIndex   Int
+  answer       String
+  easeFactor   Float       @default(2.5)
+  interval     Int         @default(0)
+  repetitions  Int         @default(0)
+  lapses       Int         @default(0)
+  timesSeen    Int         @default(0)
+  timesCorrect Int         @default(0)
+  dueDate      DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+  reviews      ReviewLog[]
+
+  @@unique([sentenceId, tokenIndex])
+  @@index([sentenceId])
+  @@index([dueDate])
+}
+
+model ReviewLog {
+  id         String   @id @default(cuid())
+  cardId     String
+  card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  reviewedAt DateTime @default(now())
+  grade      String
+  wasCorrect Boolean
+  usedHint   Boolean
+
+  @@index([cardId])
+  @@index([reviewedAt])
+}
