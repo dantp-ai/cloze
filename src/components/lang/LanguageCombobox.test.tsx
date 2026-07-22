@@ -59,4 +59,47 @@ describe("LanguageCombobox", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
+
+  it("moves the active-option highlight with ArrowDown/ArrowUp", () => {
+    render(<LanguageCombobox languages={languages} triggerLabel="Add" onSelect={vi.fn()} />);
+    open();
+    const input = screen.getByLabelText("Search languages");
+    let options = screen.getAllByRole("option");
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(options[1]).toHaveAttribute("aria-selected", "false");
+    expect(options[2]).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    options = screen.getAllByRole("option");
+    expect(options[0]).toHaveAttribute("aria-selected", "false");
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(options[2]).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    options = screen.getAllByRole("option");
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(options[1]).toHaveAttribute("aria-selected", "false");
+    expect(options[2]).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("selects the highlighted option on Enter", () => {
+    const onSelect = vi.fn();
+    render(<LanguageCombobox languages={languages} triggerLabel="Add" onSelect={onSelect} />);
+    open();
+    const input = screen.getByLabelText("Search languages");
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onSelect).toHaveBeenCalledWith("es");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("closes the listbox on outside pointerdown", () => {
+    render(<LanguageCombobox languages={languages} triggerLabel="Add" onSelect={vi.fn()} />);
+    open();
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
 });
