@@ -1,16 +1,22 @@
 # Cloze
 
+<p align="center">
+  <img src="assets/logo.svg" alt="Cloze" width="440">
+</p>
+
 A spaced-repetition app for learning a language from sentences you write yourself.
 
 You type a sentence, click the words you want blanked out, and practice filling them back in.
 Each blanked word is tracked and scheduled on its own, so the words you keep forgetting come back sooner than the ones you know.
 
-It is built for one person (you), runs locally, and keeps everything in a Postgres database.
+Runs locally, and stores everything in a Postgres database.
+
+![intro app](assets/intro.gif)
 
 ## Requirements
 
-- Node 20 or newer
-- Docker, for Postgres
+- Node 20+
+- Docker
 
 ## Setup
 
