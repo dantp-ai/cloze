@@ -9,3 +9,6 @@ dist/
 *.tsbuildinfo
 docs/*
 *DS_Store
+assets/complete/
+*.zip
+*.mov
