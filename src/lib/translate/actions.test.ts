@@ -5,13 +5,16 @@ import { resetDb } from "@/test/db";
 let currentUserId = "";
 vi.mock("@/lib/auth/guard", () => ({ requireUserId: async () => currentUserId }));
 
-// Mock the provider layer so no real network is hit.
+// Mock the provider layer so no real network is hit, but keep the real
+// UnsupportedLanguageError class so `instanceof` checks in the action work.
 const translateWith = vi.fn(async (..._args: unknown[]) => "the cat");
-vi.mock("@/lib/translate/providers", () => ({
-  translateWith: (...args: unknown[]) => translateWith(...args),
-}));
+vi.mock("@/lib/translate/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/translate/providers")>();
+  return { ...actual, translateWith: (...args: unknown[]) => translateWith(...args) };
+});
 
 import { getTranslation } from "./actions";
+import { UnsupportedLanguageError } from "./providers";
 
 async function seed(settings?: object) {
   const user = await prisma.user.create({ data: { email: "me@example.com", passwordHash: "x" } });
@@ -70,6 +73,15 @@ describe("getTranslation", () => {
     const { sentence } = await seed({ translation: { provider: "deepl", apiKey: "key" } });
     translateWith.mockRejectedValueOnce(new Error("boom"));
     expect(await getTranslation(sentence.id, "en")).toEqual({ ok: false, error: "Translation failed." });
+  });
+
+  it("names the languages when the provider does not support them", async () => {
+    const { sentence } = await seed({ translation: { provider: "deepl", apiKey: "key" } });
+    translateWith.mockRejectedValueOnce(new UnsupportedLanguageError());
+    expect(await getTranslation(sentence.id, "en")).toEqual({
+      ok: false,
+      error: "Italian → English isn't supported for translation yet.",
+    });
   });
 
   it("refuses a sentence the user does not own", async () => {

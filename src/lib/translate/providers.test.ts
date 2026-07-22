@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { deeplTranslate, googleTranslate, translateWith } from "./providers";
+import { deeplTranslate, googleTranslate, translateWith, UnsupportedLanguageError } from "./providers";
 
 function mockFetch(status: number, body: unknown) {
   return vi.fn(async () => ({
@@ -39,6 +39,26 @@ describe("translateWith", () => {
   it("dispatches to the named provider", async () => {
     const fetchFn = mockFetch(200, { translations: [{ text: "hi" }] });
     expect(await translateWith("deepl", "ciao", "it", "en", "key", fetchFn)).toBe("hi");
+  });
+});
+
+describe("unsupported language handling", () => {
+  it("throws UnsupportedLanguageError when DeepL rejects the language with 400", async () => {
+    await expect(
+      deeplTranslate("x", "it", "vo", "key", mockFetch(400, {})),
+    ).rejects.toBeInstanceOf(UnsupportedLanguageError);
+  });
+
+  it("throws UnsupportedLanguageError when Google rejects the language with 400", async () => {
+    await expect(
+      googleTranslate("x", "it", "vo", "key", mockFetch(400, {})),
+    ).rejects.toBeInstanceOf(UnsupportedLanguageError);
+  });
+
+  it("throws a generic (non-unsupported) error on other non-ok responses", async () => {
+    await expect(
+      deeplTranslate("x", "it", "en", "key", mockFetch(500, {})),
+    ).rejects.toThrow(/request failed/i);
   });
 });
 

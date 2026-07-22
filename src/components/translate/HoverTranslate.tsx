@@ -16,7 +16,7 @@ export function HoverTranslate({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState<string | null | undefined>(undefined); // undefined = not fetched
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     function down(e: KeyboardEvent) {
@@ -41,6 +41,7 @@ export function HoverTranslate({
   // Reset the cached translation if the target language changes.
   useEffect(() => {
     setText(undefined);
+    setError(null);
   }, [lang, sentenceId]);
 
   async function onEnter() {
@@ -48,12 +49,12 @@ export function HoverTranslate({
     setOpen(true);
     if (text === undefined && !loading) {
       setLoading(true);
-      setFailed(false);
+      setError(null);
       const res = await getTranslation(sentenceId, lang);
       if (res.ok) {
         setText(res.text);
       } else {
-        setFailed(true);
+        setError(res.error);
       }
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export function HoverTranslate({
       {children}
       {open && (
         <span className="absolute left-0 top-full z-10 mt-1 max-w-xs rounded-md border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-700 shadow-lg dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
-          {loading ? "Translating..." : failed ? "Translation failed" : (text ?? "No translation")}
+          {loading ? "Translating..." : error ?? (text ?? "No translation")}
         </span>
       )}
     </span>
