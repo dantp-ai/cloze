@@ -3,14 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkspace } from "@/lib/workspace/actions";
-
-const LANGS = [
-  { code: "it", label: "Italian" },
-  { code: "es", label: "Spanish" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
-  { code: "en", label: "English" },
-];
+import { LanguageCombobox } from "@/components/lang/LanguageCombobox";
+import { ALL_LANGUAGES, COMMON_LANG_CODES, languageLabel } from "@/lib/lang/languages";
 
 export function CreateWorkspaceForm() {
   const router = useRouter();
@@ -25,6 +19,8 @@ export function CreateWorkspaceForm() {
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
     );
   }
+
+  const extraLangs = translationLangs.filter((code) => !COMMON_LANG_CODES.includes(code));
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,36 +50,59 @@ export function CreateWorkspaceForm() {
         aria-label="Workspace name"
         className="rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700"
       />
-      <label htmlFor="ws-learning" className="text-sm text-neutral-500">Learning</label>
-      <select
-        id="ws-learning"
-        value={learningLang}
-        onChange={(e) => setLearningLang(e.target.value)}
-        className="rounded-md border border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-      >
-        {LANGS.map((l) => (
-          <option key={l.code} value={l.code}>{l.label}</option>
-        ))}
-      </select>
-      <label id="ws-translate-label" className="text-sm text-neutral-500">Translate to</label>
-      <div role="group" aria-labelledby="ws-translate-label" className="flex flex-wrap gap-2">
-        {LANGS.map((l) => (
+
+      <span className="text-sm text-neutral-500">Learning</span>
+      <div>
+        <LanguageCombobox
+          languages={ALL_LANGUAGES}
+          value={learningLang}
+          onSelect={setLearningLang}
+          ariaLabel="Learning language"
+        />
+      </div>
+
+      <span id="ws-translate-label" className="text-sm text-neutral-500">Translate to</span>
+      <div role="group" aria-labelledby="ws-translate-label" className="flex flex-wrap items-center gap-2">
+        {COMMON_LANG_CODES.map((code) => (
           <button
             type="button"
-            key={l.code}
-            onClick={() => toggleTranslation(l.code)}
-            aria-pressed={translationLangs.includes(l.code)}
+            key={code}
+            onClick={() => toggleTranslation(code)}
+            aria-pressed={translationLangs.includes(code)}
             className={
               "rounded-full border px-3 py-1 text-sm " +
-              (translationLangs.includes(l.code)
+              (translationLangs.includes(code)
                 ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
                 : "border-neutral-300 dark:border-neutral-700")
             }
           >
-            {l.label}
+            {languageLabel(code)}
           </button>
         ))}
+        {extraLangs.map((code) => (
+          <span
+            key={code}
+            className="inline-flex items-center gap-1 rounded-full border border-neutral-900 bg-neutral-900 px-3 py-1 text-sm text-white dark:border-white dark:bg-white dark:text-neutral-900"
+          >
+            {languageLabel(code)}
+            <button
+              type="button"
+              onClick={() => toggleTranslation(code)}
+              aria-label={`Remove ${languageLabel(code)}`}
+              className="text-xs leading-none"
+            >
+              {"×"}
+            </button>
+          </span>
+        ))}
+        <LanguageCombobox
+          languages={ALL_LANGUAGES}
+          triggerLabel="＋ Add language"
+          exclude={[...COMMON_LANG_CODES, ...translationLangs]}
+          onSelect={toggleTranslation}
+        />
       </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
         type="submit"
