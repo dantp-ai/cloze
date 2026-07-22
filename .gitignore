@@ -8,3 +8,4 @@ dist/
 .superpowers/
 *.tsbuildinfo
 docs/*
+*DS_Store
