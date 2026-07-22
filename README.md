@@ -1,7 +1,7 @@
 # Cloze
 
 <p align="center">
-  <img src="assets/logo.svg" alt="Cloze" width="440">
+  <img src="assets/logo.svg" alt="Cloze" width="256">
 </p>
 
 A spaced-repetition app for learning a language from sentences you write yourself.
