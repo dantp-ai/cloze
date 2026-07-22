@@ -109,6 +109,7 @@ export function SentenceForm({
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         rows={2}
+        autoComplete="off"
         className="rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700"
       />
 
@@ -141,6 +142,7 @@ export function SentenceForm({
           onChange={(e) => setNewTopic(e.target.value)}
           placeholder="New topic"
           aria-label="New topic name"
+          autoComplete="off"
           className="flex-1 rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-700"
         />
         <button
@@ -163,6 +165,7 @@ export function SentenceForm({
             id={`tr-${lang}`}
             value={translations[lang] ?? ""}
             onChange={(e) => setTranslations((prev) => ({ ...prev, [lang]: e.target.value }))}
+            autoComplete="off"
             className="rounded-md border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700"
           />
         </div>
