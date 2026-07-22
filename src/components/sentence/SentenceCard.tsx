@@ -48,7 +48,7 @@ export function SentenceCard({ sentence, lang }: { sentence: SentenceCardData; l
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2 text-sm">
         <div className="flex gap-2">
-          <Link href={`/browse/${sentence.id}/edit`} className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
+          <Link href={`/browse/${sentence.id}/edit`} className="text-neutral-500 hover:text-green-600">
             Edit
           </Link>
           <button
