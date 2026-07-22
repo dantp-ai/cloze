@@ -15,8 +15,8 @@ Runs locally, and stores everything in a Postgres database.
 
 ## Requirements
 
-- Node 20+
-- Docker
+- Node 20+ (Follow the macOS installation instructions on the official NodeJS docs [here](https://nodejs.org/en/download))
+- Docker (Follow the instructions for installing Docker on macOS on their official docs [here](https://www.docker.com/products/docker-desktop/))
 
 ## Setup
 
