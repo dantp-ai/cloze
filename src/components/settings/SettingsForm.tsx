@@ -3,15 +3,56 @@
 import { useState } from "react";
 import { updateSettings } from "@/lib/settings/actions";
 import type { WorkspaceSettings } from "@/lib/settings/workspace-settings";
+import { FieldTooltip } from "./FieldTooltip";
 
-const SR_FIELDS: { key: keyof WorkspaceSettings["sr"]; label: string; step: string }[] = [
-  { key: "newCardsPerSession", label: "New cards per session", step: "1" },
-  { key: "startingEase", label: "Starting ease", step: "0.1" },
-  { key: "minEase", label: "Minimum ease", step: "0.1" },
-  { key: "hardMultiplier", label: "Hard multiplier", step: "0.1" },
-  { key: "easyBonus", label: "Easy bonus", step: "0.1" },
-  { key: "intervalModifier", label: "Interval modifier", step: "0.1" },
-  { key: "maxInterval", label: "Max interval (days)", step: "1" },
+const SR_FIELDS: {
+  key: keyof WorkspaceSettings["sr"];
+  label: string;
+  step: string;
+  help: string;
+}[] = [
+  {
+    key: "newCardsPerSession",
+    label: "New cards per session (cards)",
+    step: "1",
+    help: "Max number of new, never-studied cards introduced in one practice session.",
+  },
+  {
+    key: "startingEase",
+    label: "Starting ease (x)",
+    step: "0.1",
+    help: 'The ease factor a new card starts at. On a "Good" review the next interval is multiplied by this factor (default 2.5).',
+  },
+  {
+    key: "minEase",
+    label: "Minimum ease (x)",
+    step: "0.1",
+    help: 'The lowest the ease factor can fall to. It drops 0.2 after "Again" and 0.15 after "Hard", but never below this floor (default 1.3).',
+  },
+  {
+    key: "hardMultiplier",
+    label: "Hard multiplier (x)",
+    step: "0.1",
+    help: 'When you answer "Hard", the next interval is the current interval times this multiplier, instead of using the ease factor (default 1.2).',
+  },
+  {
+    key: "easyBonus",
+    label: "Easy bonus (x)",
+    step: "0.1",
+    help: 'When you answer "Easy", the interval uses the ease factor times this extra bonus (default 1.5).',
+  },
+  {
+    key: "intervalModifier",
+    label: "Interval modifier (x)",
+    step: "0.1",
+    help: "A global multiplier applied to every new interval. Below 1 shortens all intervals (more reviews); above 1 lengthens them (default 1.0).",
+  },
+  {
+    key: "maxInterval",
+    label: "Max interval (days)",
+    step: "1",
+    help: "The upper limit on how long an interval can grow, in days. No card is scheduled further out than this (default 365).",
+  },
 ];
 
 export function SettingsForm({
@@ -51,7 +92,10 @@ export function SettingsForm({
       <h2 className="text-sm font-medium text-neutral-500">Spaced repetition</h2>
       {SR_FIELDS.map((field) => (
         <div key={field.key} className="flex items-center justify-between gap-4">
-          <label htmlFor={field.key} className="text-sm">{field.label}</label>
+          <span className="flex items-center gap-1.5 text-sm">
+            <label htmlFor={field.key}>{field.label}</label>
+            <FieldTooltip text={field.help} />
+          </span>
           <input
             id={field.key}
             type="number"
