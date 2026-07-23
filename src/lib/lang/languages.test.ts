@@ -18,6 +18,17 @@ describe("ALL_LANGUAGES", () => {
     for (const c of COMMON_LANG_CODES) expect(codes).toContain(c);
   });
 
+  it("is limited to DeepL-supported languages", () => {
+    const codes = ALL_LANGUAGES.map((l) => l.code);
+    // Representative DeepL-supported languages are present...
+    expect(codes).toEqual(expect.arrayContaining(["pl", "ja", "nl", "uk", "zh"]));
+    // ...while languages DeepL does not support are excluded.
+    expect(codes).not.toContain("sw"); // Swahili
+    expect(codes).not.toContain("af"); // Afrikaans
+    // The list stays small enough to keep the picker uncluttered.
+    expect(ALL_LANGUAGES.length).toBeLessThan(40);
+  });
+
   it("is sorted case-insensitively by label", () => {
     const labels = ALL_LANGUAGES.map((l) => l.label);
     const sorted = [...labels].sort((a, b) =>
