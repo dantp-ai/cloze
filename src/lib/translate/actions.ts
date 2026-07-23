@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/auth/guard";
 import { resolveSettings } from "@/lib/settings/workspace-settings";
-import { translateWith } from "@/lib/translate/providers";
+import { translateWith, UnsupportedLanguageError } from "@/lib/translate/providers";
+import { languageLabel } from "@/lib/lang/languages";
 
 export async function getTranslation(
   sentenceId: string,
@@ -36,7 +37,14 @@ export async function getTranslation(
       update: { text },
     });
     return { ok: true, text };
-  } catch {
+  } catch (err) {
+    if (err instanceof UnsupportedLanguageError) {
+      const source = sentence.workspace.learningLang;
+      return {
+        ok: false,
+        error: `${languageLabel(source)} → ${languageLabel(lang)} isn't supported for translation yet.`,
+      };
+    }
     return { ok: false, error: "Translation failed." };
   }
 }

@@ -1,5 +1,17 @@
 export type FetchFn = typeof fetch;
 
+// Thrown when a provider rejects the request because it does not support the
+// requested source or target language. Providers signal this with HTTP 400.
+// The workspace form allows any ISO 639-1 language, but each provider covers
+// only a subset, so this lets callers surface a clear "not supported" message
+// instead of a generic failure.
+export class UnsupportedLanguageError extends Error {
+  constructor(message = "Language not supported by the translation provider.") {
+    super(message);
+    this.name = "UnsupportedLanguageError";
+  }
+}
+
 export async function deeplTranslate(
   text: string,
   source: string,
@@ -19,6 +31,7 @@ export async function deeplTranslate(
       target_lang: target.toUpperCase(),
     }),
   });
+  if (res.status === 400) throw new UnsupportedLanguageError();
   if (!res.ok) throw new Error(`DeepL request failed: ${res.status}`);
   const data = (await res.json()) as { translations: { text: string }[] };
   const translated = data.translations[0]?.text;
@@ -41,6 +54,7 @@ export async function googleTranslate(
       body: JSON.stringify({ q: text, source, target, format: "text" }),
     },
   );
+  if (res.status === 400) throw new UnsupportedLanguageError();
   if (!res.ok) throw new Error(`Google request failed: ${res.status}`);
   const data = (await res.json()) as { data: { translations: { translatedText: string }[] } };
   const translated = data.data.translations[0]?.translatedText;

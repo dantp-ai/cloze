@@ -8,14 +8,20 @@ type Row = { id: string; text: string; translations: Record<string, string> };
 export function SideBySide({ langs, rows }: { langs: string[]; rows: Row[] }) {
   const [lang, setLang] = useState(langs[0] ?? "");
   const [fetched, setFetched] = useState<Record<string, string>>({}); // key: `${id}:${lang}`
+  const [errors, setErrors] = useState<Record<string, string>>({}); // key: `${id}:${lang}`
   const [pending, setPending] = useState<string | null>(null);
 
   async function translate(id: string) {
     const key = `${id}:${lang}`;
     setPending(key);
+    setErrors((prev) => {
+      const { [key]: _dropped, ...rest } = prev;
+      return rest;
+    });
     try {
       const res = await getTranslation(id, lang);
       if (res.ok) setFetched((prev) => ({ ...prev, [key]: res.text ?? "No translation" }));
+      else setErrors((prev) => ({ ...prev, [key]: res.error }));
     } finally {
       setPending(null);
     }
@@ -55,14 +61,17 @@ export function SideBySide({ langs, rows }: { langs: string[]; rows: Row[] }) {
               <span className="text-sm">{row.text}</span>
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 {translation ?? (
-                  <button
-                    type="button"
-                    onClick={() => translate(row.id)}
-                    disabled={pending === key}
-                    className="text-neutral-500 underline disabled:opacity-50"
-                  >
-                    {pending === key ? "Translating..." : "Translate"}
-                  </button>
+                  <span className="flex flex-col items-start gap-1">
+                    <button
+                      type="button"
+                      onClick={() => translate(row.id)}
+                      disabled={pending === key}
+                      className="text-neutral-500 underline disabled:opacity-50"
+                    >
+                      {pending === key ? "Translating..." : errors[key] ? "Retry" : "Translate"}
+                    </button>
+                    {errors[key] && <span className="text-xs text-red-600">{errors[key]}</span>}
+                  </span>
                 )}
               </span>
             </li>
