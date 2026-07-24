@@ -6,10 +6,10 @@ import { createWorkspace } from "@/lib/workspace/actions";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/lib/workspace/actions", () => ({ createWorkspace: vi.fn() }));
 
-function addSwahili() {
+function addPolish() {
   fireEvent.click(screen.getByRole("button", { name: /add language/i }));
-  fireEvent.change(screen.getByLabelText("Search languages"), { target: { value: "swahili" } });
-  fireEvent.click(screen.getByRole("option", { name: /swahili/i }));
+  fireEvent.change(screen.getByLabelText("Search languages"), { target: { value: "polish" } });
+  fireEvent.click(screen.getByRole("option", { name: /polish/i }));
 }
 
 describe("CreateWorkspaceForm", () => {
@@ -20,19 +20,19 @@ describe("CreateWorkspaceForm", () => {
 
   it("adds a language chip via the combobox and submits its code", () => {
     render(<CreateWorkspaceForm />);
-    addSwahili();
-    expect(screen.getByRole("button", { name: /remove swahili/i })).toBeInTheDocument();
+    addPolish();
+    expect(screen.getByRole("button", { name: /remove polish/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /create workspace/i }));
     expect(createWorkspace).toHaveBeenCalledWith(
-      expect.objectContaining({ translationLangs: expect.arrayContaining(["en", "sw"]) }),
+      expect.objectContaining({ translationLangs: expect.arrayContaining(["en", "pl"]) }),
     );
   });
 
   it("removes an added chip", () => {
     render(<CreateWorkspaceForm />);
-    addSwahili();
-    fireEvent.click(screen.getByRole("button", { name: /remove swahili/i }));
-    expect(screen.queryByRole("button", { name: /remove swahili/i })).not.toBeInTheDocument();
+    addPolish();
+    fireEvent.click(screen.getByRole("button", { name: /remove polish/i }));
+    expect(screen.queryByRole("button", { name: /remove polish/i })).not.toBeInTheDocument();
   });
 
   it("toggles a common quick-pick chip", () => {

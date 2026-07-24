@@ -1,31 +1,39 @@
-// Canonical ISO 639-1 two-letter language codes.
-const ISO_639_1_CODES = [
-  "aa", "ab", "ae", "af", "ak", "am", "an", "ar", "as", "av", "ay", "az",
-  "ba", "be", "bg", "bh", "bi", "bm", "bn", "bo", "br", "bs",
-  "ca", "ce", "ch", "co", "cr", "cs", "cu", "cv", "cy",
-  "da", "de", "dv", "dz",
-  "ee", "el", "en", "eo", "es", "et", "eu",
-  "fa", "ff", "fi", "fj", "fo", "fr", "fy",
-  "ga", "gd", "gl", "gn", "gu", "gv",
-  "ha", "he", "hi", "ho", "hr", "ht", "hu", "hy", "hz",
-  "ia", "id", "ie", "ig", "ii", "ik", "io", "is", "it", "iu",
-  "ja", "jv",
-  "ka", "kg", "ki", "kj", "kk", "kl", "km", "kn", "ko", "kr", "ks", "ku", "kv", "kw", "ky",
-  "la", "lb", "lg", "li", "ln", "lo", "lt", "lu", "lv",
-  "mg", "mh", "mi", "mk", "ml", "mn", "mr", "ms", "mt", "my",
-  "na", "nb", "nd", "ne", "ng", "nl", "nn", "no", "nr", "nv", "ny",
-  "oc", "oj", "om", "or", "os",
-  "pa", "pi", "pl", "ps", "pt",
-  "qu",
-  "rm", "rn", "ro", "ru", "rw",
-  "sa", "sc", "sd", "se", "sg", "si", "sk", "sl", "sm", "sn", "so", "sq", "sr", "ss", "st", "su", "sv", "sw",
-  "ta", "te", "tg", "th", "ti", "tk", "tl", "tn", "to", "tr", "ts", "tt", "tw", "ty",
-  "ug", "uk", "ur", "uz",
-  "ve", "vi", "vo",
-  "wa", "wo",
-  "xh",
-  "yi", "yo",
-  "za", "zh", "zu",
+// ISO 639-1 codes for the languages DeepL supports as a source/target.
+// The picker is intentionally limited to this set: DeepL only handles these,
+// and a shorter list keeps the dropdowns uncluttered. Codes are sent to the
+// provider upper-cased (see translate/providers.ts), e.g. "nb" -> "NB".
+// Update this list when DeepL adds languages.
+const DEEPL_LANG_CODES = [
+  "ar", // Arabic
+  "bg", // Bulgarian
+  "cs", // Czech
+  "da", // Danish
+  "de", // German
+  "el", // Greek
+  "en", // English
+  "es", // Spanish
+  "et", // Estonian
+  "fi", // Finnish
+  "fr", // French
+  "hu", // Hungarian
+  "id", // Indonesian
+  "it", // Italian
+  "ja", // Japanese
+  "ko", // Korean
+  "lt", // Lithuanian
+  "lv", // Latvian
+  "nb", // Norwegian Bokmål
+  "nl", // Dutch
+  "pl", // Polish
+  "pt", // Portuguese
+  "ro", // Romanian
+  "ru", // Russian
+  "sk", // Slovak
+  "sl", // Slovenian
+  "sv", // Swedish
+  "tr", // Turkish
+  "uk", // Ukrainian
+  "zh", // Chinese
 ];
 
 const displayNames =
@@ -43,7 +51,8 @@ export function languageLabel(code: string): string {
   }
 }
 
-export const ALL_LANGUAGES: { code: string; label: string }[] = ISO_639_1_CODES
+// All languages offered by the picker, sorted by English display name.
+export const ALL_LANGUAGES: { code: string; label: string }[] = DEEPL_LANG_CODES
   .map((code) => ({ code, label: languageLabel(code) }))
   .sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" }));
 
