@@ -6,12 +6,23 @@ export type TranslationProvider = "manual" | "deepl" | "google";
 export type TranslationSettings = { provider: TranslationProvider; apiKey: string };
 export const DEFAULT_TRANSLATION_SETTINGS: TranslationSettings = { provider: "manual", apiKey: "" };
 
-export type WorkspaceSettings = { sr: SRParams; check: CheckOptions; translation: TranslationSettings };
+// Practice-mode behavior. `translationCountsAsHint`: when true, answering a card
+// with its translation visible is graded "Hard" (like the multiple-choice hint).
+export type PracticeOptions = { translationCountsAsHint: boolean };
+export const DEFAULT_PRACTICE_OPTIONS: PracticeOptions = { translationCountsAsHint: false };
+
+export type WorkspaceSettings = {
+  sr: SRParams;
+  check: CheckOptions;
+  translation: TranslationSettings;
+  practice: PracticeOptions;
+};
 
 export const DEFAULT_SETTINGS: WorkspaceSettings = {
   sr: DEFAULT_SR_PARAMS,
   check: DEFAULT_CHECK_OPTIONS,
   translation: DEFAULT_TRANSLATION_SETTINGS,
+  practice: DEFAULT_PRACTICE_OPTIONS,
 };
 
 const srSchema = z.object({
@@ -32,6 +43,10 @@ const checkSchema = z.object({
 const translationSchema = z.object({
   provider: z.enum(["manual", "deepl", "google"]),
   apiKey: z.string(),
+});
+
+const practiceSchema = z.object({
+  translationCountsAsHint: z.boolean(),
 });
 
 // Merge a stored (possibly partial or invalid) blob over the defaults, field by field.
@@ -64,13 +79,25 @@ export function resolveSettings(raw: unknown): WorkspaceSettings {
   const apiKeyParsed = translationSchema.shape.apiKey.safeParse(translationRaw.apiKey);
   if (apiKeyParsed.success) translation.apiKey = apiKeyParsed.data;
 
-  return { sr, check, translation };
+  const practiceRaw =
+    (blob.practice && typeof blob.practice === "object" ? blob.practice : {}) as Record<
+      string,
+      unknown
+    >;
+  const practice = { ...DEFAULT_PRACTICE_OPTIONS };
+  for (const key of Object.keys(DEFAULT_PRACTICE_OPTIONS) as (keyof PracticeOptions)[]) {
+    const parsed = practiceSchema.shape[key].safeParse(practiceRaw[key]);
+    if (parsed.success) practice[key] = parsed.data as boolean;
+  }
+
+  return { sr, check, translation, practice };
 }
 
 export function validateSettings(settings: WorkspaceSettings): boolean {
   return (
     srSchema.safeParse(settings.sr).success &&
     checkSchema.safeParse(settings.check).success &&
-    translationSchema.safeParse(settings.translation).success
+    translationSchema.safeParse(settings.translation).success &&
+    practiceSchema.safeParse(settings.practice).success
   );
 }

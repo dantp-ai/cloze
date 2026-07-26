@@ -26,6 +26,7 @@ export async function updateSettings(
         sr: settings.sr,
         check: settings.check,
         translation: { provider: settings.translation.provider, apiKey },
+        practice: settings.practice,
       },
     },
   });
