@@ -67,6 +67,7 @@ export function SettingsForm({
   const [sr, setSr] = useState(settings.sr);
   const [check, setCheck] = useState(settings.check);
   const [translation, setTranslation] = useState(settings.translation);
+  const [practice, setPractice] = useState(settings.practice);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
@@ -77,7 +78,7 @@ export function SettingsForm({
     setSaved(false);
     setPending(true);
     try {
-      const res = await updateSettings(workspaceId, { sr, check, translation });
+      const res = await updateSettings(workspaceId, { sr, check, translation, practice });
       if (res.ok) setSaved(true);
       else setError(res.error);
     } catch {
@@ -153,6 +154,18 @@ export function SettingsForm({
           className="w-40 rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
         />
       </div>
+
+      <h2 className="mt-2 text-sm font-medium text-neutral-500">Practice</h2>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={practice.translationCountsAsHint}
+          onChange={(e) =>
+            setPractice((prev) => ({ ...prev, translationCountsAsHint: e.target.checked }))
+          }
+        />
+        Count the shown translation as a hint (those cards are graded Hard)
+      </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {saved && <p className="text-sm text-green-600">Saved.</p>}

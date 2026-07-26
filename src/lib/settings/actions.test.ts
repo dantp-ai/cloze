@@ -32,6 +32,14 @@ describe("updateSettings", () => {
     expect(resolveSettings(stored?.settings).sr.newCardsPerSession).toBe(7);
   });
 
+  it("persists practice options", async () => {
+    const ws = await seed();
+    const next = { ...DEFAULT_SETTINGS, practice: { translationCountsAsHint: true } };
+    expect(await updateSettings(ws.id, next)).toEqual({ ok: true });
+    const stored = await prisma.workspace.findUnique({ where: { id: ws.id } });
+    expect(resolveSettings(stored?.settings).practice.translationCountsAsHint).toBe(true);
+  });
+
   it("rejects invalid settings", async () => {
     const ws = await seed();
     const bad = { ...DEFAULT_SETTINGS, sr: { ...DEFAULT_SETTINGS.sr, minEase: -1 } };

@@ -5,9 +5,19 @@ import { startPractice } from "@/lib/practice/start";
 import type { PracticeItem } from "@/lib/practice/session";
 import { PracticeRunner } from "./PracticeRunner";
 
-type Props = { workspaceId: string; topics: { id: string; name: string }[] };
+type Props = {
+  workspaceId: string;
+  topics: { id: string; name: string }[];
+  translationLang: string | null;
+  translationCountsAsHint: boolean;
+};
 
-export function PracticeSetup({ workspaceId, topics }: Props) {
+export function PracticeSetup({
+  workspaceId,
+  topics,
+  translationLang,
+  translationCountsAsHint,
+}: Props) {
   const [scope, setScope] = useState<string>(""); // "" = whole workspace
   const [items, setItems] = useState<PracticeItem[] | null>(null);
   const [pending, setPending] = useState(false);
@@ -22,7 +32,14 @@ export function PracticeSetup({ workspaceId, topics }: Props) {
     }
   }
 
-  if (items) return <PracticeRunner items={items} />;
+  if (items)
+    return (
+      <PracticeRunner
+        items={items}
+        translationLang={translationLang}
+        translationCountsAsHint={translationCountsAsHint}
+      />
+    );
 
   return (
     <div className="flex flex-col gap-4">

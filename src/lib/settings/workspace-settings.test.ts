@@ -20,4 +20,15 @@ describe("resolveSettings", () => {
     const resolved = resolveSettings({ sr: { minEase: "nope" } });
     expect(resolved.sr.minEase).toBe(DEFAULT_SETTINGS.sr.minEase);
   });
+
+  it("defaults practice.translationCountsAsHint to false and parses a stored boolean", () => {
+    expect(resolveSettings({}).practice.translationCountsAsHint).toBe(false);
+    expect(
+      resolveSettings({ practice: { translationCountsAsHint: true } }).practice.translationCountsAsHint,
+    ).toBe(true);
+    // A non-boolean stored value falls back to the default.
+    expect(
+      resolveSettings({ practice: { translationCountsAsHint: "nope" } }).practice.translationCountsAsHint,
+    ).toBe(false);
+  });
 });

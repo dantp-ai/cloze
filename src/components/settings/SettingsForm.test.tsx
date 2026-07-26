@@ -43,4 +43,14 @@ describe("SettingsForm", () => {
       expect.objectContaining({ sr: expect.objectContaining({ newCardsPerSession: 5 }) }),
     );
   });
+
+  it("submits the practice translation-as-hint toggle", async () => {
+    render(<SettingsForm workspaceId="w1" settings={DEFAULT_SETTINGS} />);
+    await userEvent.click(screen.getByLabelText(/count the shown translation as a hint/i));
+    await userEvent.click(screen.getByRole("button", { name: /save/i }));
+    expect(updateSettings).toHaveBeenCalledWith(
+      "w1",
+      expect.objectContaining({ practice: { translationCountsAsHint: true } }),
+    );
+  });
 });

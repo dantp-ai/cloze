@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PracticeItem } from "@/lib/practice/session";
 import { submitReview, getCardOptions, type ReviewFeedback } from "@/lib/practice/actions";
+import { getTranslation } from "@/lib/translate/actions";
 
-type Props = { items: PracticeItem[] };
+type Props = {
+  items: PracticeItem[];
+  translationLang?: string | null;
+  translationCountsAsHint?: boolean;
+};
 
-export function PracticeRunner({ items }: Props) {
+export function PracticeRunner({
+  items,
+  translationLang = null,
+  translationCountsAsHint = false,
+}: Props) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [hinted, setHinted] = useState<Record<string, boolean>>({});
@@ -15,6 +24,27 @@ export function PracticeRunner({ items }: Props) {
   const [correctCount, setCorrectCount] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Translation of the current sentence, fetched on demand and cached by
+  // sentenceId. Shown under the masked sentence as an aid.
+  const [tData, setTData] = useState<Record<string, { text: string | null }>>({});
+  const [tError, setTError] = useState<Record<string, string>>({});
+  const [tLoading, setTLoading] = useState<Record<string, boolean>>({});
+  const requested = useRef<Set<string>>(new Set());
+
+  const sid = index < items.length ? items[index].sentenceId : undefined;
+
+  useEffect(() => {
+    if (!translationLang || !sid || requested.current.has(sid)) return;
+    requested.current.add(sid);
+    setTLoading((prev) => ({ ...prev, [sid]: true }));
+    getTranslation(sid, translationLang)
+      .then((res) => {
+        if (res.ok) setTData((prev) => ({ ...prev, [sid]: { text: res.text } }));
+        else setTError((prev) => ({ ...prev, [sid]: res.error }));
+      })
+      .finally(() => setTLoading((prev) => ({ ...prev, [sid]: false })));
+  }, [translationLang, sid]);
 
   if (items.length === 0) {
     return <p className="text-sm text-neutral-500">Nothing due right now. Come back later.</p>;
@@ -31,6 +61,16 @@ export function PracticeRunner({ items }: Props) {
 
   const item = items[index];
   const feedbackById = new Map((feedback ?? []).map((f) => [f.cardId, f]));
+
+  // Text of the translation aid shown under the current sentence.
+  const translation = tData[item.sentenceId];
+  const translationLine = tError[item.sentenceId]
+    ? tError[item.sentenceId]
+    : !translation
+      ? "Translating…"
+      : translation.text
+        ? `${translationLang}: ${translation.text}`
+        : "No translation available";
 
   async function showHint(cardId: string) {
     const res = await getCardOptions(cardId);
@@ -55,10 +95,11 @@ export function PracticeRunner({ items }: Props) {
     setError(null);
     setPending(true);
     try {
+      const translationShown = !!tData[item.sentenceId]?.text;
       const inputs = item.blanks.map((b) => ({
         cardId: b.cardId,
         input: answers[b.cardId] ?? "",
-        usedHint: hinted[b.cardId] ?? false,
+        usedHint: (hinted[b.cardId] ?? false) || (translationCountsAsHint && translationShown),
       }));
       const res = await submitReview(inputs);
       if (res.ok) {
@@ -134,6 +175,7 @@ export function PracticeRunner({ items }: Props) {
           );
         })}
       </p>
+      {translationLang && <p className="text-sm text-neutral-500">{translationLine}</p>}
       {error && <span className="text-sm text-red-600">{error}</span>}
       <button
         type="submit"
