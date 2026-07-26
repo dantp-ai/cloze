@@ -11,6 +11,11 @@ type Props = {
   translationCountsAsHint?: boolean;
 };
 
+// Card ids of a sentence's blanks in reading (left-to-right) order.
+function orderedCardIds(item: PracticeItem): string[] {
+  return [...item.blanks].sort((a, b) => a.tokenIndex - b.tokenIndex).map((b) => b.cardId);
+}
+
 export function PracticeRunner({
   items,
   translationLang = null,
@@ -46,6 +51,13 @@ export function PracticeRunner({
       .finally(() => setTLoading((prev) => ({ ...prev, [sid]: false })));
   }, [translationLang, sid]);
 
+  // Blinking caret on the first masked word of each card.
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const firstCardId = index < items.length ? orderedCardIds(items[index])[0] : undefined;
+  useEffect(() => {
+    if (firstCardId) inputRefs.current[firstCardId]?.focus();
+  }, [index, firstCardId]);
+
   if (items.length === 0) {
     return <p className="text-sm text-neutral-500">Nothing due right now. Come back later.</p>;
   }
@@ -71,6 +83,25 @@ export function PracticeRunner({
       : translation.text
         ? `${translationLang}: ${translation.text}`
         : "No translation available";
+
+  const cardIds = orderedCardIds(item);
+  function onBlankKeyDown(e: React.KeyboardEvent<HTMLInputElement>, cardId: string) {
+    // Cmd + Left/Right jumps between masked words (plain arrows move the caret).
+    if (e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      e.preventDefault();
+      const pos = cardIds.indexOf(cardId);
+      const nextPos =
+        e.key === "ArrowRight" ? Math.min(pos + 1, cardIds.length - 1) : Math.max(pos - 1, 0);
+      inputRefs.current[cardIds[nextPos]]?.focus();
+      return;
+    }
+    // "?" reveals the hint. It is never part of a cloze answer, so it can trigger
+    // at any time without blocking any typed letters (Shift is allowed - "?" needs it).
+    if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      showHint(cardId);
+    }
+  }
 
   async function showHint(cardId: string) {
     const res = await getCardOptions(cardId);
@@ -126,11 +157,15 @@ export function PracticeRunner({
           return (
             <span key={i} className="inline-flex flex-col items-start align-baseline">
               <input
+                ref={(el) => {
+                  inputRefs.current[blank.cardId] = el;
+                }}
                 aria-label={`blank ${blank.tokenIndex}`}
                 value={answers[blank.cardId] ?? ""}
                 onChange={(e) =>
                   setAnswers((prev) => ({ ...prev, [blank.cardId]: e.target.value }))
                 }
+                onKeyDown={(e) => onBlankKeyDown(e, blank.cardId)}
                 disabled={!!feedback}
                 className={
                   "mx-1 w-28 rounded border-b bg-transparent px-1 text-center outline-none " +
