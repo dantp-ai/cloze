@@ -18,5 +18,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # The full app (Next.js + Postgres). Behind the "app" profile so the plain
+  # `docker compose up -d` dev workflow still starts ONLY Postgres.
+  # Run everything with: docker compose --profile app up
+  app:
+    profiles: ["app"]
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/cloze?schema=public"
+      # Fixed secret for LOCAL use only. A public deployment must set its own
+      # (see the Fly.io section in the README).
+      SESSION_SECRET: "cloze-local-development-session-secret-change-me"
+      NODE_ENV: "production"
+    command: ["sh", "-c", "npx prisma migrate deploy && npx next start -H 0.0.0.0 -p 3000"]
+    ports:
+      - "3000:3000"
+
 volumes:
   cloze-pgdata:
