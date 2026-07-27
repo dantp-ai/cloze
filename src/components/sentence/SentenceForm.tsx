@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokenize } from "@/lib/text/tokenize";
 import { createSentence, updateSentence } from "@/lib/sentence/actions";
@@ -39,10 +39,13 @@ export function SentenceForm({
   const [newTopic, setNewTopic] = useState("");
   const [topicError, setTopicError] = useState<string | null>(null);
   const [addingTopic, setAddingTopic] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const tokens = useMemo(() => tokenize(text), [text]);
 
   function onTextChange(next: string) {
+    setSaved(false);
     setText(next);
     // Drop any masked index that is no longer a maskable token in the new text.
     const nextTokens = tokenize(next);
@@ -72,7 +75,12 @@ export function SentenceForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // The "Save & add another" button carries value="continue"; it saves without
+    // leaving the form so several sentences can be added in a row.
+    const stay =
+      ((e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null)?.value === "continue";
     setError(null);
+    setSaved(false);
     setPending(true);
     const payload = {
       workspaceId,
@@ -87,8 +95,18 @@ export function SentenceForm({
           ? await updateSentence(sentenceId, payload)
           : await createSentence(payload);
       if (res.ok) {
-        router.push("/browse");
-        router.refresh();
+        if (stay) {
+          // Reset the entry fields but keep the chosen topic for the next sentence.
+          setText("");
+          setMasked([]);
+          setTranslations({});
+          setSaved(true);
+          textareaRef.current?.focus();
+          router.refresh();
+        } else {
+          router.push("/browse");
+          router.refresh();
+        }
       } else {
         setError(res.error);
       }
@@ -106,6 +124,7 @@ export function SentenceForm({
       </label>
       <textarea
         id="sentence-text"
+        ref={textareaRef}
         value={text}
         onChange={(e) => onTextChange(e.target.value)}
         rows={2}
@@ -172,13 +191,26 @@ export function SentenceForm({
       ))}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={pending}
-        className="self-start rounded-md bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-      >
-        {mode === "edit" ? "Save changes" : "Save sentence"}
-      </button>
+      {saved && <p className="text-sm text-green-600">Saved. Add another below.</p>}
+      <div className="flex gap-2 self-start">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-md bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        >
+          {mode === "edit" ? "Save changes" : "Save sentence"}
+        </button>
+        {mode === "create" && (
+          <button
+            type="submit"
+            value="continue"
+            disabled={pending}
+            className="rounded-md border border-neutral-300 px-3 py-2 disabled:opacity-50 dark:border-neutral-700"
+          >
+            Save &amp; add another
+          </button>
+        )}
+      </div>
     </form>
   );
 }
