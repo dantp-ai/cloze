@@ -33,6 +33,64 @@ The first account you create becomes the only account - signup closes afterwards
 
 Then create a workspace (the language you are learning, plus the languages you translate into), add a sentence, and start practicing.
 
+## Run it without a dev setup
+
+If you just want to use Cloze on your own computer, you do not need Node or any manual database setup.
+You need Docker Desktop and a single command.
+
+1. Install Docker Desktop (the link is under Requirements above).
+2. Download this project: click the green "Code" button on GitHub, choose "Download ZIP", and unzip it (or `git clone` it if you prefer).
+3. Open a terminal in the project folder and run:
+
+```bash
+docker compose --profile app up
+```
+
+The first run builds the app and can take a few minutes.
+When it finishes, open http://localhost:3000 and register your account.
+
+Your data is stored in a Docker volume, so it survives restarts.
+Stop it with Ctrl+C, and start it again any time with the same command.
+
+## Deploy your own on Fly.io
+
+This puts Cloze on the internet at your own address, reachable from any device.
+Fly.io is not free: a small always-on app costs roughly $2-5/month and requires a credit card.
+
+1. Install the Fly CLI and sign up: https://fly.io/docs/hands-on/install-flyctl/
+2. From the project folder, create the app (a `fly.toml` is already included, so keep the suggested Dockerfile settings):
+
+```bash
+fly launch --no-deploy
+```
+
+Pick a unique app name and a nearby region when prompted.
+
+3. Create and attach a Postgres database - this sets `DATABASE_URL` for you:
+
+```bash
+fly postgres create
+fly postgres attach <the-database-name-it-created>
+```
+
+Prefer a free database instead? Create one on [Neon](https://neon.tech) and run `fly secrets set DATABASE_URL="<your-neon-url>"`.
+
+4. Set the session secret to a random value:
+
+```bash
+fly secrets set SESSION_SECRET=$(openssl rand -hex 32)
+```
+
+5. Deploy - pending migrations run automatically:
+
+```bash
+fly deploy
+```
+
+6. Open it with `fly open` and register your account right away.
+
+Because signup closes after the first account, register immediately so nobody else can claim your instance.
+
 ## How it works
 
 **Workspaces.** A workspace is one language pair, for example Italian with English translations.
